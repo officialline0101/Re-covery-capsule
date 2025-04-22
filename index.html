@@ -301,22 +301,21 @@
         }
 
         .highlight-background {
-            background-color: #f9f9d6;
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            margin-top: 10px;
-            /* 上に余白を追加 */
-            text-align: center;
-            /* コンテナ内の要素を中央に配置 */
-        }
+    background-color: #5572d9;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    margin-top: 10px;
+    text-align: center;
+}
 
-        .highlight-text {
-            display: block;
-            font-weight: bold;
-            text-align: center;
-            /* テキストを中央揃えにする */
-        }
+.highlight-text {
+    display: block;
+    font-weight: bold;
+    text-align: center;
+    color: white;          /* 文字の色を白にする */
+    font-size: smaller;    /* テキストサイズを小さくする */
+}
 
         .red-circle {
             color: red;
@@ -382,8 +381,16 @@
             <button type="button" onclick="selectSymptom(this, 'treatment2')" data-price="15000">80分</button>
             <button type="button" onclick="selectSymptom(this, 'treatment3')" data-price="15000">100分（回数券お持ちの方のみ）</button>
         </div>
+        <div class="highlight-background">
+            <span class="highlight-text">チケットやクーポンをお持ちの方は<br>下記からお選びください。<br>（※クーポンを複数お持ちの方はどちらも選択できます）</span>
+        </div>
+        <div class="irradiations">
+            <button type="button" id="firstirradiations" onclick="selectirradiations(this)" data-price="1500">10分延長</button>
+            <button type="button" id="firstirradiations" onclick="selectirradiations(this)" data-price="1500">カプセル500円引き</button>
+        </div>
 
         <div class="label">希望日時</div>
+        <div class="info-text">※３０分前の予約については<br>お電話もしくはチャットでお問い合わせください。</div>
         <div class="calendar-container">
             <div class="week-button-container">
                 <button class="week-button" onclick="previousWeek()">前の週<br>←</button>
@@ -458,7 +465,8 @@
 
         // 訪問回数ごとの時間設定 (例：初めて=20分、2回目以降=15分)
         let irradiationsTimes = {
-            'ベーシックマッサージ(パック付き)〈30分〉': 0
+            '10分延長': 10,
+            'カプセル500円引き': 0
         };
 
         let selectedirradiationsTime = 0; // 訪問回数で選択された時間
@@ -522,6 +530,8 @@
         <p>${visitCountText}</p>
         <hr>
         <p>${selectedSymptomText}</p>
+        <hr>
+        <p>${irradiationsText}</p>
         <hr>
         <p>${totalTimeText}</p>
         <hr>
@@ -756,7 +766,7 @@
             // LINEトークにメッセージを送信
             liff.sendMessages([{
                 type: 'text',
-                text: `【予約フォーム】\n予約：カプセル\nお名前：${formData.name}\n電話番号：${formData.phone}\nご来店回数：${formData.visitCount}\nメニュー：${formData.selectedSymptom}\n希望日時：\n ${formData.dates[0]}\nメッセージ：${formData.message}`
+                text: `【予約フォーム】\n予約：カプセル\nお名前：${formData.name}\n電話番号：${formData.phone}\nご来店回数：${formData.visitCount}\nメニュー：${formData.selectedSymptom},${formData.irradiationsCount}\n希望日時：\n ${formData.dates[0]}\nメッセージ：${formData.message}`
             }]).then(() => {
                 /* メッセージ送信成功時の処理 */
                 alert('当日キャンセルは無いようにお願いいたします。');
@@ -920,13 +930,16 @@
                         continue;
                     }
 
-                    // ここで終了時間を使った条件処理を行う
-                    // 例えば、リアルタイムで既に過ぎた時間帯は×にする
-                    if (slotStart < now) {
-                        cell.textContent = '✕';
-                        cell.classList.add('unavailable');
-                        continue;
-                    }
+// ここで終了時間を使った条件処理を行う
+// リアルタイムと+30分先まで✖にする
+let limitTime = new Date(now);
+limitTime.setMinutes(now.getMinutes() + 30);
+
+if (slotStart < limitTime) {
+    cell.textContent = '✕';
+    cell.classList.add('unavailable');
+    continue;
+}
 
                     const isBusinessDay = businessDays.some(businessDay => {
                         const businessDayStart = new Date(businessDay.start);

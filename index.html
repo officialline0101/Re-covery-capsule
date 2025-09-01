@@ -944,6 +944,23 @@ if (slotStart < limitTime) {
     continue;
 }
 
+// 当日の09:00を特別条件で制御
+if (
+    slotStart.getFullYear() === now.getFullYear() &&
+    slotStart.getMonth() === now.getMonth() &&
+    slotStart.getDate() === now.getDate() &&
+    slotStart.getHours() === 9 &&
+    slotStart.getMinutes() === 0
+) {
+    // 現在時刻が06:00以降なら✕
+    if (now.getHours() >= 6) {
+        cell.textContent = '✕';
+        cell.classList.add('unavailable');
+        continue;
+    }
+    // 05:59までは〇（何もしないで次の条件に進む）
+}
+
         // 指定時間帯が営業日内かを判定
         const isBusinessDay = businessDays.some(businessDay => {
             const businessDayStart = new Date(businessDay.start);
